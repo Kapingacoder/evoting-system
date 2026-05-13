@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="en"
+      data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voter Dashboard - E-Voting System</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- AOS Animation -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --primary-light: #eef2ff;
+            --secondary-color: #3f37c9;
+            --accent-color: #4cc9f0;
+            --success-color: #4caf50;
+            --danger-color: #f72585;
+            --warning-color: #ffbe0b;
+            --dark-color: #2b2d42;
+            --light-color: #f8f9ff;
+            --gray-color: #adb5bd;
+            --card-bg: #ffffff;
+            --shadow-sm: 0 2px 15px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            line-height: 1.7;
+        }
+        :root {
+            --primary-color: #4e73df;
+            --secondary-color: #1cc88a;
+            --dark-color: #5a5c69;
+            --light-color: #f8f9fc;
+            --danger-color: #e74a3b;
+            --warning-color: #f6c23e;
+            --success-color: #1cc88a;
+        }
+        
+        /* Navbar */
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            box-shadow: var(--shadow-md);
+            padding: 0.8rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.6rem;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .navbar-brand i {
+            color: var(--accent-color);
+            font-size: 1.2em;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            transition: var(--transition);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .user-profile:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .user-name {
+            font-weight: 500;
+            margin: 0;
+            font-size: 0.95rem;
+        }
+        
+        .user-role {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            margin: 0;
+        }
+        
+        /* Main Content */
+        .main-content {
+            padding: 2rem 0;
+            min-height: calc(100vh - 76px);
+        }
+        
+        /* Cards */
+        .card {
+            border: none;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 2rem 0 rgba(58, 59, 69, 0.2);
+        }
+        
+        .card-header {
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            padding: 1rem 1.25rem;
+        }
+        
+        /* Candidate Cards */
+        .candidate-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .candidate-card:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .candidate-card.selected {
+            border-color: var(--success-color);
+            background-color: rgba(28, 200, 138, 0.05);
+        }
+        
+        .candidate-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .candidate-name {
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        
+        /* New Voting Interface Styles */
+        .voting-form {
+            position: relative;
+        }
+        
+        .position-section {
+            background-color: #f8f9fa;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .position-section:hover {
+            box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.05);
+        }
+        
+        .position-title {
+            font-weight: 600;
+            color: #2c3e50;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .candidate-option input[type="radio"]:checked + label {
+            border-color: var(--primary-color) !important;
+            background-color: rgba(67, 97, 238, 0.05);
+        }
+        
+        .candidate-option input[type="radio"]:checked + label .selection-indicator {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .candidate-option label {
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        
+        .candidate-option label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.08) !important;
+        }
+        
+        .candidate-photo-container {
+            width: 120px;
+            height: 120px;
+            border-radius: 8px;
+            overflow: hidden;
+            flex-shrink: 0;
+            border: 2px solid #e9ecef;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .candidate-photo-container img.candidate-photo {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            object-position: center;
+        }
+        
+        .initials-avatar {
+            width: 100%;
+            height: 100%;
+            background-color: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .initials-text {
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: #4e73df;
+            line-height: 1;
+            text-transform: uppercase;
+        }
+        
+        .selection-indicator {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #dee2e6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: transparent;
+            font-size: 0.7rem;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        
+        /* Show checkmark when ticket is selected */
+        .ticket-option input[type="radio"]:checked + label .selection-indicator {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .ticket-option input[type="radio"]:checked + label {
+            border-color: var(--primary-color) !important;
+            background-color: rgba(67, 97, 238, 0.05);
+        }
+        
+        /* Candidate option selection indicator */
+        .candidate-option input[type="radio"]:checked + label {
+            border-color: var(--primary-color) !important;
+            background-color: rgba(67, 97, 238, 0.05);
+        }
+        
+        .candidate-option input[type="radio"]:checked + label .selection-indicator {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .sticky-bottom {
+            position: sticky;
+            bottom: 0;
+            z-index: 1020;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            margin-left: -2rem;
+            margin-right: -2rem;
+            padding-left: 2rem;
+            padding-right: 2rem;
+        }
+        
+        .progress {
+            overflow: visible;
+            background-color: #e9ecef;
+            border-radius: 10px;
+        }
+        
+        .progress-bar {
+            position: relative;
+            border-radius: 10px;
+            transition: width 0.6s ease;
+        }
+        
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            right: -5px;
+            top: -3px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: white;
+            border: 3px solid var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        
+        .btn-vote {
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-vote:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.2);
+        }
+        
+        .candidate-position {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .candidate-party {
+            color: var(--dark-color);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* Buttons */
+        .btn-vote {
+            background-color: var(--primary-color);
+            border: none;
+            padding: 0.5rem 1.5rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-vote:hover {
+            background-color: #2e59d9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-voted {
+            background-color: var(--success-color);
+            cursor: not-allowed;
+        }
+        
+        /* Alert Messages */
+        .alert {
+            border: none;
+            border-radius: 0.5rem;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border-left: 4px solid var(--success-color);
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid var(--danger-color);
+        }
+        
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        /* Election Info */
+        .election-info {
+            background: linear-gradient(135deg, #f8f9fc 0%, #e3e6f0 100%);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .election-title {
+            color: var(--primary-color);
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+        
+        .election-time {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            color: var(--dark-color);
+        }
+        
+        .election-time i {
+            margin-right: 0.5rem;
+            color: var(--primary-color);
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .candidate-card {
+                margin-bottom: 2rem;
+            }
+            
+            .candidate-photo-container {
+                width: 100px;
+                height: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" href="/voter/dashboard">
+            <i class="fas fa-vote-yea"></i>
+            <span>E-Voting</span>
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link active" href="/voter/dashboard">
+                        <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/voter/results">
+                        <i class="fas fa-poll me-1"></i> Results
+                    </a>
+                </li>
+            </ul>
+            <div class="navbar-nav ms-auto">
+                <a href="/voter/profile" class="user-profile text-decoration-none">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-meta d-none d-md-block">
+                        <p class="user-name mb-0" sec:authentication="name">User</p>
+                        <small class="user-role">Voter</small>
+                    </div>
+                </a>
+                <form th:action="@{/logout}" method="post" class="ms-3">
+                    <button type="submit" class="btn btn-outline-light btn-sm d-flex align-items-center" style="padding: 0.4rem 0.8rem;">
+                        <i class="fas fa-sign-out-alt me-1"></i>
+                        <span class="d-none d-sm-inline">Logout</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<div class="main-content">
+    <div class="container">
+        <!-- Welcome Message -->
+        <div class="alert alert-primary d-flex align-items-center mb-4">
+            <i class="fas fa-user-circle me-3" style="font-size: 2rem;"></i>
+            <div>
+                <h4 class="alert-heading mb-1">Welcome, <span th:text="${fullName}">User</span>!</h4>
+                <p class="mb-0">You are logged in as a voter. Please cast your vote in the current election.</p>
+            </div>
+        </div>
+        
+        <!-- Flash Messages -->
+    <div th:if="${success != null}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <span th:text="${success}">Success message</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    
+    <div th:if="${error != null}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span th:text="${error}">Error message</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Voter Dashboard</h1>
+        <div>
+            <span class="badge bg-success text-white p-2" th:if="${hasVoted}">
+                <i class="fas fa-check-circle me-1"></i> Voted
+            </span>
+            <span class="badge bg-warning text-dark p-2" th:unless="${hasVoted}">
+                <i class="fas fa-exclamation-circle me-1"></i> Not Voted
+            </span>
+        </div>
+    </div>
+    
+    <!-- Election Info -->
+    <div th:if="${mostRecentElection != null}" class="election-info">
+        <h3 class="election-title">
+            <i class="fas fa-vote-yea me-2"></i>
+            <span th:text="'Active Election: ' + ${mostRecentElection.name}">Election Name</span>
+        </h3>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="election-time">
+                    <i class="far fa-calendar-alt"></i>
+                    <div>
+                        <div class="fw-bold">Election Period</div>
+                        <div>
+                            <span th:text="${#temporals.format(mostRecentElection.startTime, 'MMM d, yyyy hh:mm a')}">Start Date</span> - 
+                            <span th:text="${#temporals.format(mostRecentElection.endTime, 'MMM d, yyyy hh:mm a')}">End Date</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="election-time">
+                    <i class="far fa-clock"></i>
+                    <div>
+                        <div class="fw-bold">Time Remaining</div>
+                        <div id="countdown" class="fw-bold text-primary">
+                            Calculating...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div th:if="${(voted == null or not voted) and isVotingOpen}" class="mt-3">
+            <div class="alert alert-info mb-0">
+                <i class="fas fa-info-circle me-2"></i>
+                Please cast your vote before the election ends. You can only vote once.
+            </div>
+        </div>
+        <div th:if="${!isVotingOpen}" class="mt-3">
+            <div class="alert alert-warning mb-0">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Voting is currently closed. Please check back during the election period.
+            </div>
+        </div>
+    </div>
+    
+    <div th:if="${mostRecentElection == null}" class="alert alert-warning">
+        <i class="fas fa-info-circle me-2"></i>
+        There are currently no active elections. Please check back later.
+    </div>
+    
+    <!-- Main Content Row -->
+    <div class="row mt-4">
+        <!-- Ticket-based Voting Section (President & Vice President) -->
+        <div th:if="${(voted == null or not voted) and mostRecentElection != null and isVotingOpen and not tickets.isEmpty()}" class="col-lg-12">
+            <div class="card shadow mb-4 border-0">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="m-0 text-dark"><i class="fas fa-users text-primary me-2"></i>President & Vice President Election</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-light border mb-4">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-info-circle text-primary me-2"></i>
+                            <div>
+                                <strong class="d-block">Voting Instructions</strong>
+                                <p class="mb-0 small">Select one ticket (President + Vice President pair). Both positions will be voted for together.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <form th:action="@{/voter/vote/ticket}" method="post" id="ticketVoteForm" class="voting-form">
+                        <div class="row g-4">
+                            <div th:each="ticket : ${tickets}" class="col-12 col-md-6 col-lg-4">
+                                <div class="ticket-option">
+                                    <input type="radio"
+                                           th:name="'ticketId'"
+                                           th:id="'ticket_'+${ticket.id}"
+                                           th:value="${ticket.id}"
+                                           class="d-none"
+                                           onchange="validateTicketVotes()">
+                                    <label th:for="'ticket_'+${ticket.id}" 
+                                           class="card h-100 m-0 border-0 shadow-sm cursor-pointer hover-shadow transition-all"
+                                           style="cursor: pointer;">
+                                        <div class="card-body p-4">
+                                            <!-- Ticket Name -->
+                                            <div class="text-center mb-3">
+                                                <span class="badge bg-primary" th:text="${ticket.name}">Ticket Name</span>
+                                            </div>
+                                            
+                                            <!-- President Section -->
+                                            <div class="d-flex align-items-center mb-3 p-3 bg-light rounded">
+                                                <div class="candidate-photo-container me-3" style="width: 120px; height: 120px; border-radius: 8px;">
+                                                    <div th:if="${ticket.presidentPhotoUrl}" class="h-100">
+                                                        <img th:src="@{'/uploads/' + ${ticket.presidentPhotoUrl}}" 
+                                                             class="candidate-photo"
+                                                             alt="President photo">
+                                                    </div>
+                                                    <div th:unless="${ticket.presidentPhotoUrl}" class="initials-avatar d-flex align-items-center justify-content-center h-100 bg-primary text-white">
+                                                        <span th:with="nameParts=${#strings.arraySplit(#strings.trim(ticket.presidentName), ' ')}"
+                                                              th:text="${#strings.toUpperCase(#strings.substring(nameParts[0], 0, 1))}"
+                                                              class="initials-text" style="color: white; font-size: 1.5rem;"></span>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div class="small text-muted fw-bold">PRESIDENT</div>
+                                                    <div class="fw-bold text-dark" th:text="${ticket.presidentName}">President Name</div>
+                                                    <div class="small text-muted" th:text="${ticket.presidentParty}">Party</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Vice President Section -->
+                                            <div class="d-flex align-items-center mb-3 p-3 bg-light rounded">
+                                                <div class="candidate-photo-container me-3" style="width: 120px; height: 120px; border-radius: 8px;">
+                                                    <div th:if="${ticket.vicePresidentPhotoUrl}" class="h-100">
+                                                        <img th:src="@{'/uploads/' + ${ticket.vicePresidentPhotoUrl}}" 
+                                                             class="candidate-photo"
+                                                             alt="Vice President photo">
+                                                    </div>
+                                                    <div th:unless="${ticket.vicePresidentPhotoUrl}" class="initials-avatar d-flex align-items-center justify-content-center h-100 bg-secondary text-white">
+                                                        <span th:with="nameParts=${#strings.arraySplit(#strings.trim(ticket.vicePresidentName), ' ')}"
+                                                              th:text="${#strings.toUpperCase(#strings.substring(nameParts[0], 0, 1))}"
+                                                              class="initials-text" style="color: white; font-size: 1.5rem;"></span>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div class="small text-muted fw-bold">VICE PRESIDENT</div>
+                                                    <div class="fw-bold text-dark" th:text="${ticket.vicePresidentName}">Vice President Name</div>
+                                                    <div class="small text-muted" th:text="${ticket.vicePresidentParty}">Party</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Selection Indicator -->
+                                            <div class="text-center mt-3">
+                                                <div class="selection-indicator d-inline-flex">
+                                                    <i class="fas fa-check"></i>
+                                                </div>
+                                                <div class="small text-muted mt-1">Select this ticket</div>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="sticky-bottom bg-white border-top py-3 mt-4">
+                            <div class="container">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            <div class="progress" style="width: 120px; height: 8px;">
+                                                <div class="progress-bar bg-primary" role="progressbar" 
+                                                     id="ticketProgressBar"
+                                                     style="width: 0%;" 
+                                                     aria-valuenow="0" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id="ticketSelectionSummary" class="small">
+                                            <span class="fw-bold text-dark">Select a ticket to vote</span>
+                                        </div>
+                                    </div>
+                                    <button type="button" 
+                                            class="btn btn-primary btn-lg px-4" 
+                                            id="submitTicketVoteBtn"
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#confirmTicketVoteModal"
+                                            disabled>
+                                        <i class="fas fa-paper-plane me-2"></i>Submit My Vote
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Legacy Position-based Voting Section -->
+        <div th:if="${(voted == null or not voted) and mostRecentElection != null and isVotingOpen and tickets.isEmpty() and candidatesByPosition != null and !candidatesByPosition.isEmpty()}" class="col-lg-12">
+            <div class="card shadow mb-4 border-0">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="m-0 text-dark"><i class="fas fa-vote-yea text-primary me-2"></i>Cast Your Vote</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-light border mb-4">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-info-circle text-primary me-2"></i>
+                            <div>
+                                <strong class="d-block">Voting Instructions</strong>
+                                <p class="mb-0 small">Please select one candidate for each position. You can review your selections before submitting.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <form th:action="@{/voter/vote}" method="post" id="voteForm" class="voting-form">
+                            <div th:each="entry : ${candidatesByPosition}" class="position-section mb-5 p-4 bg-light rounded-3">
+                                <h6 class="position-title mb-4 d-flex align-items-center">
+                                    <span class="badge bg-primary me-2"><i class="fas fa-user-tie me-1"></i> <span th:text="${entry.key}">Position</span></span>
+                                    <small class="text-muted ms-auto">Select one</small>
+                                </h6>
+                                
+                                <div class="row g-4">
+                                    <div th:each="candidate : ${entry.value}" class="col-12 col-md-6 col-lg-4">
+                                        <div class="candidate-option">
+                                            <input type="radio"
+                                                   th:name="'candidate_'+${entry.key}"
+                                                   th:id="'candidate_'+${entry.key.replace(' ', '_')}+'_'+${candidate.id}"
+                                                   th:value="${candidate.id}"
+                                                   class="d-none"
+                                                   onchange="validateVotes()">
+                                            <label th:for="'candidate_'+${entry.key.replace(' ', '_')}+'_'+${candidate.id}" 
+                                                   class="card h-100 m-0 border-0 shadow-sm cursor-pointer hover-shadow transition-all">
+                                                <div class="card-body p-3">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="candidate-photo-container me-3 position-relative" style="width: 120px; height: 120px; border-radius: 8px;">
+                                                            <div th:if="${candidate.photoUrl}" class="h-100">
+                                                                <img th:src="${candidate.photoUrl}" 
+                                                                     class="candidate-photo"
+                                                                     alt="Candidate photo">
+                                                            </div>
+                                                            <div th:unless="${candidate.photoUrl}" class="initials-avatar d-flex align-items-center justify-content-center h-100">
+                                                                <span th:with="nameParts=${#strings.arraySplit(#strings.trim(candidate.name), ' ')}"
+                                                                      th:text="${#strings.toUpperCase(#strings.substring(nameParts[0], 0, 1) + (nameParts.length > 1 ? #strings.substring(nameParts[nameParts.length - 1], 0, 1) : ''))}"
+                                                                      class="initials-text"></span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex-grow-1">
+                                                            <h6 class="mb-1 fw-bold text-dark" th:text="${candidate.name}">Candidate Name</h6>
+                                                            <span class="badge bg-light text-dark border mb-2" th:text="${candidate.party != null} ? ${candidate.party} : 'Independent'">
+                                                                Party
+                                                            </span>
+                                                            <p class="small text-muted mb-0" th:text="${candidate.bio != null} ? ${#strings.abbreviate(candidate.bio, 80, '...')} : 'No bio available'">
+                                                                Brief candidate information
+                                                            </p>
+                                                        </div>
+                                                        <div class="ms-2">
+                                                            <div class="selection-indicator">
+                                                                <i class="fas fa-check"></i>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="sticky-bottom bg-white border-top py-3 mt-4">
+                                <div class="container">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3">
+                                                <div class="progress" style="width: 120px; height: 8px;">
+                                                    <div class="progress-bar bg-primary" role="progressbar" 
+                                                         th:style="'width: ' + ${candidatesByPosition != null ? '100' : '0'} + '%;'" 
+                                                         aria-valuenow="0" 
+                                                         aria-valuemin="0" 
+                                                         aria-valuemax="100">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div id="selectionSummary" class="small">
+                                                <span class="fw-bold text-dark"><span id="selectedCount">0</span>/<span th:text="${candidatesByPosition != null ? candidatesByPosition.size() : 0}">0</span></span> positions selected
+                                            </div>
+                                        </div>
+                                        <button type="button" 
+                                                class="btn btn-primary btn-lg px-4" 
+                                                id="submitVoteBtn"
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#confirmVoteModal"
+                                                onclick="showConfirmation()"
+                                                disabled>
+                                            <i class="fas fa-paper-plane me-2"></i>Submit My Vote
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- No Candidates Available -->
+        <div th:if="${(voted == null or not voted) and mostRecentElection != null and isVotingOpen and tickets.isEmpty() and (candidatesByPosition == null or candidatesByPosition.isEmpty())}" class="col-lg-12">
+            <div class="text-center py-5">
+                <div class="alert alert-warning d-inline-block">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    No candidates are available for the current election. Please check back later.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Voted Confirmation -->
+        <div th:if="${voted != null and voted}" class="col-lg-12">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Thank You for Voting!
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                Your vote has been successfully recorded.
+                            </div>
+                            <p class="mt-3 mb-0">
+                                You can view the election results once voting has ended.
+                                <a href="/voter/results" class="text-success font-weight-bold">View Results <i class="fas fa-arrow-right"></i></a>
+                            </p>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-4x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Election Results Preview -->
+    <div th:if="${(voted != null and voted) or (mostRecentElection != null and !isVotingOpen)}" class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Election Results</h6>
+                    <a th:href="@{/voter/results}" class="btn btn-sm btn-outline-primary">
+                        View Full Results <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div th:if="${electionResults != null and !electionResults.isEmpty()}">
+                        <div th:each="positionResult : ${electionResults}" class="mb-4">
+                            <h6 class="font-weight-bold" th:text="${positionResult.positionName}">Position Name</h6>
+                            <div class="progress mb-3" style="height: 25px;">
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     th:style="'width: ' + ${positionResult.candidates[0].votePercentage} + '%'"
+                                     th:aria-valuenow="${positionResult.candidates[0].votePercentage}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    <span th:text="${positionResult.candidates[0].name} + ': ' + ${positionResult.candidates[0].votePercentage} + '%'">
+                                        Candidate: 45%
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="small text-muted">
+                                Leading: 
+                                <span class="font-weight-bold" th:text="${positionResult.candidates[0].name}">Candidate Name</span> 
+                                with 
+                                <span class="font-weight-bold" th:text="${positionResult.candidates[0].voteCount} + ' votes (' + ${positionResult.candidates[0].votePercentage} + '%)'">
+                                    120 votes (45%)
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div th:if="${electionResults == null or electionResults.isEmpty()}" class="text-center py-4">
+                        <p class="text-muted">Results will be displayed here once voting has ended.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Vote Confirmation Modal -->
+    <div class="modal fade" id="confirmVoteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Your Vote</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Please review your selections before confirming:</strong></p>
+                    <div id="selectedCandidatesList">
+                        <div class="text-center py-3">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Important:</strong> You can only vote once. This action cannot be undone.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="document.getElementById('voteForm').submit()">
+                        <i class="fas fa-check-circle me-1"></i> Confirm Vote
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Ticket Vote Confirmation Modal -->
+    <div class="modal fade" id="confirmTicketVoteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Your Vote</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>You are voting for:</strong></p>
+                    <div id="selectedTicketInfo" class="text-center py-3">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Important:</strong> You can only vote once. This action cannot be undone.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="document.getElementById('ticketVoteForm').submit()">
+                        <i class="fas fa-check-circle me-1"></i> Confirm Vote
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="bg-white py-4 mt-auto">
+    <div class="container">
+        <div class="text-center text-muted small">
+            <div class="mb-2">
+                <a href="#" class="text-muted me-3">About</a>
+                <a href="#" class="text-muted me-3">Privacy</a>
+                <a href="#" class="text-muted me-3">Terms</a>
+                <a href="#" class="text-muted">Contact</a>
+            </div>
+            <div>
+                &copy; 2023 E-Voting System. All rights reserved.
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script th:inline="javascript">
+    // Initialize variables
+    var totalPositions = /*[[${candidatesByPosition != null ? candidatesByPosition.size() : 0}]]*/ 0;
+    
+    // Validate votes - check if all positions are selected
+    function validateVotes() {
+        const form = document.getElementById('voteForm');
+        const radioGroups = {};
+        let totalPositions = 0;
+        let selectedCount = 0;
+
+        // Group radio buttons by name
+        Array.from(form.elements).forEach(element => {
+            if (element.type === 'radio') {
+                if (!radioGroups[element.name]) {
+                    radioGroups[element.name] = [];
+                    totalPositions++;
+                }
+                radioGroups[element.name].push(element);
+                
+                // Toggle selected state on the card
+                const label = element.nextElementSibling;
+                if (label && label.classList.contains('card')) {
+                    if (element.checked) {
+                        label.classList.add('border-primary');
+                    } else {
+                        label.classList.remove('border-primary');
+                    }
+                }
+            }
+        });
+
+        // Count how many positions have a selection
+        selectedCount = Object.values(radioGroups).filter(group => 
+            group.some(radio => radio.checked)
+        ).length;
+
+        // Update the selection summary
+        const countElement = document.getElementById('selectedCount');
+        const submitButton = document.getElementById('submitVoteBtn');
+        
+        if (countElement) {
+            countElement.textContent = selectedCount;
+        }
+        
+        // Update progress bar
+        const progressBar = document.querySelector('.progress-bar');
+        if (progressBar) {
+            const progress = totalPositions > 0 ? Math.round((selectedCount / totalPositions) * 100) : 0;
+            progressBar.style.width = progress + '%';
+            progressBar.setAttribute('aria-valuenow', progress);
+            
+            // Update progress bar color based on completion
+            if (progress === 100) {
+                progressBar.classList.remove('bg-warning');
+                progressBar.classList.add('bg-success');
+            } else if (progress > 50) {
+                progressBar.classList.remove('bg-warning', 'bg-success');
+                progressBar.classList.add('bg-primary');
+            } else {
+                progressBar.classList.remove('bg-primary', 'bg-success');
+                progressBar.classList.add('bg-warning');
+            }
+        }
+
+        // Enable/disable submit button
+        if (submitButton) {
+            const isComplete = selectedCount === totalPositions;
+            submitButton.disabled = !isComplete;
+            submitButton.classList.toggle('btn-primary', isComplete);
+            submitButton.classList.toggle('btn-secondary', !isComplete);
+            
+            // Add pulse animation when all positions are selected
+            if (isComplete) {
+                submitButton.classList.add('animate__animated', 'animate__pulse');
+                setTimeout(() => {
+                    submitButton.classList.remove('animate__animated', 'animate__pulse');
+                }, 1000);
+            }
+        }
+
+        // Update confirmation modal if we have selections
+        if (selectedCount > 0) {
+            updateConfirmationModal(radioGroups);
+        }
+    }
+    
+    // Validate ticket votes
+    function validateTicketVotes() {
+        const form = document.getElementById('ticketVoteForm');
+        const selectedRadio = form.querySelector('input[type="radio"]:checked');
+        const submitButton = document.getElementById('submitTicketVoteBtn');
+        const progressBar = document.getElementById('ticketProgressBar');
+        const summaryDiv = document.getElementById('ticketSelectionSummary');
+        
+        if (selectedRadio) {
+            // Enable submit button
+            submitButton.disabled = false;
+            submitButton.classList.remove('btn-secondary');
+            submitButton.classList.add('btn-primary');
+            
+            // Update progress bar
+            progressBar.style.width = '100%';
+            progressBar.classList.remove('bg-warning');
+            progressBar.classList.add('bg-success');
+            
+            // Update summary
+            summaryDiv.innerHTML = '<span class="fw-bold text-success">Ticket selected! Ready to vote.</span>';
+            
+            // Add border to selected card
+            const ticketId = selectedRadio.value;
+            document.querySelectorAll('.ticket-option label').forEach(label => {
+                label.classList.remove('border-primary');
+            });
+            const selectedLabel = document.querySelector(`label[for="ticket_${ticketId}"]`);
+            if (selectedLabel) {
+                selectedLabel.classList.add('border-primary');
+            }
+            
+            // Update confirmation modal
+            updateTicketConfirmationModal(ticketId);
+        } else {
+            // Disable submit button
+            submitButton.disabled = true;
+            submitButton.classList.remove('btn-primary');
+            submitButton.classList.add('btn-secondary');
+            
+            // Update progress bar
+            progressBar.style.width = '0%';
+            progressBar.classList.remove('bg-success');
+            progressBar.classList.add('bg-warning');
+            
+            // Update summary
+            summaryDiv.innerHTML = '<span class="fw-bold text-dark">Select a ticket to vote</span>';
+        }
+    }
+    
+    // Update ticket confirmation modal
+    function updateTicketConfirmationModal(ticketId) {
+        const modalBody = document.querySelector('#confirmTicketVoteModal .modal-body');
+        if (!modalBody) return;
+        
+        // Find the selected ticket's information from the page
+        const selectedRadio = document.querySelector(`input[type="radio"][value="${ticketId}"]`);
+        if (!selectedRadio) return;
+        
+        const label = selectedRadio.nextElementSibling;
+        if (!label) return;
+        
+        // Extract ticket info from the label
+        const ticketName = label.querySelector('.badge.bg-primary')?.textContent || 'Ticket';
+        
+        // Find president and vice president info from the cards within the label
+        const infoDivs = label.querySelectorAll('.d-flex.align-items-center');
+        
+        let presidentName = '';
+        let presidentParty = '';
+        let vicePresidentName = '';
+        let vicePresidentParty = '';
+        
+        if (infoDivs.length >= 2) {
+            // First div is President
+            const presidentDiv = infoDivs[0];
+            const presidentNameEl = presidentDiv.querySelector('.fw-bold.text-dark');
+            const presidentPartyEl = presidentDiv.querySelectorAll('.small.text-muted');
+            if (presidentNameEl) presidentName = presidentNameEl.textContent.trim();
+            if (presidentPartyEl.length > 1) presidentParty = presidentPartyEl[1].textContent.trim();
+            
+            // Second div is Vice President
+            const vicePresidentDiv = infoDivs[1];
+            const vicePresidentNameEl = vicePresidentDiv.querySelector('.fw-bold.text-dark');
+            const vicePresidentPartyEl = vicePresidentDiv.querySelectorAll('.small.text-muted');
+            if (vicePresidentNameEl) vicePresidentName = vicePresidentNameEl.textContent.trim();
+            if (vicePresidentPartyEl.length > 1) vicePresidentParty = vicePresidentPartyEl[1].textContent.trim();
+        }
+        
+        const ticketInfoHtml = `
+            <div class="text-center mb-3">
+                <i class="fas fa-clipboard-check text-success" style="font-size: 2rem;"></i>
+            </div>
+            <div class="p-4 bg-light rounded border">
+                <div class="mb-3 text-center">
+                    <span class="badge bg-primary fs-5 px-3 py-2">${ticketName}</span>
+                </div>
+                <div class="mb-3 p-3 bg-white rounded border">
+                    <div class="small text-muted fw-bold mb-1">
+                        <i class="fas fa-user-tie me-1"></i> PRESIDENT
+                    </div>
+                    <div class="fw-bold text-dark fs-5">${presidentName}</div>
+                    <div class="badge bg-secondary">${presidentParty}</div>
+                </div>
+                <div class="p-3 bg-white rounded border">
+                    <div class="small text-muted fw-bold mb-1">
+                        <i class="fas fa-user-friends me-1"></i> VICE PRESIDENT
+                    </div>
+                    <div class="fw-bold text-dark fs-5">${vicePresidentName}</div>
+                    <div class="badge bg-secondary">${vicePresidentParty}</div>
+                </div>
+            </div>
+        `;
+        
+        const infoContainer = modalBody.querySelector('#selectedTicketInfo');
+        if (infoContainer) {
+            infoContainer.innerHTML = ticketInfoHtml;
+        }
+    }
+
+    // Update the confirmation modal with selected candidates
+    function updateConfirmationModal(radioGroups) {
+        const modalBody = document.querySelector('#confirmVoteModal .modal-body');
+        if (!modalBody) return;
+        
+        // Get all checked radio buttons
+        const checkedRadios = document.querySelectorAll('input[type="radio"]:checked');
+        
+        if (checkedRadios.length === 0) {
+            const listContainer = modalBody.querySelector('#selectedCandidatesList');
+            if (listContainer) {
+                listContainer.innerHTML = '<div class="alert alert-warning">No candidates selected.</div>';
+            }
+            return;
+        }
+        
+        let selectionsHtml = '<div class="selected-candidates">';
+        
+        checkedRadios.forEach(radio => {
+            // Get the associated label which contains the candidate info
+            const label = document.querySelector(`label[for="${radio.id}"]`);
+            if (!label) return;
+            
+            // Find the candidate name and party elements
+            const nameElement = label.querySelector('h6.fw-bold');
+            const partyElement = label.querySelector('.badge.bg-light');
+            
+            if (nameElement) {
+                const candidateName = nameElement.textContent.trim();
+                const candidateParty = partyElement ? partyElement.textContent.trim() : 'Independent';
+                
+                // Extract position from the radio button name (e.g., "candidate_President" -> "President")
+                let positionName = radio.name.replace('candidate_', '').replace(/_/g, ' ');
+                
+                // Capitalize first letter of position
+                positionName = positionName.charAt(0).toUpperCase() + positionName.slice(1);
+                
+                selectionsHtml += `
+                    <div class="selected-candidate mb-3 p-3 border rounded bg-light">
+                        <div class="fw-bold text-primary mb-2">
+                            <i class="fas fa-user-tie me-1"></i> ${positionName}
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">${candidateName}</span>
+                            <span class="badge bg-primary">${candidateParty}</span>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+        
+        selectionsHtml += '</div>';
+        
+        // Update modal content
+        let listContainer = modalBody.querySelector('#selectedCandidatesList');
+        if (!listContainer) {
+            listContainer = document.createElement('div');
+            listContainer.id = 'selectedCandidatesList';
+            modalBody.insertBefore(listContainer, modalBody.firstChild);
+        }
+        
+        listContainer.innerHTML = `
+            <div class="text-center mb-3">
+                <i class="fas fa-clipboard-check text-success" style="font-size: 2rem;"></i>
+                <h6 class="mt-2">Please confirm your selections:</h6>
+            </div>
+            ${selectionsHtml}
+        `;
+    }
+    
+    // Show confirmation modal
+    function showConfirmation() {
+        const selectedRadios = Array.from(document.querySelectorAll('input[type="radio"]:checked'));
+        updateConfirmationModal(selectedRadios);
+    }
+    
+    // Countdown timer for election end
+    function updateCountdown() {
+        const countdownElement = document.getElementById('countdown');
+        if (!countdownElement) return;
+        
+        const endTime = new Date(countdownElement.getAttribute('data-end-time'));
+        const now = new Date();
+        
+        if (now >= endTime) {
+            countdownElement.innerHTML = 'Voting has ended';
+            return;
+        }
+        
+        const timeLeft = endTime - now;
+        
+        // Calculate days, hours, minutes, seconds
+        const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+        
+        // Display the countdown
+        let countdownText = '';
+        if (days > 0) countdownText += `${days}d `;
+        if (hours > 0 || days > 0) countdownText += `${hours}h `;
+        if (minutes > 0 || hours > 0 || days > 0) countdownText += `${minutes}m `;
+        countdownText += `${seconds}s`;
+        
+        countdownElement.textContent = countdownText;
+    }
+    
+    // Initialize countdown if element exists
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set end time for countdown (replace with actual end time from server)
+        const countdownElement = document.getElementById('countdown');
+        if (countdownElement) {
+            // Get end time from data attribute or use a default (24 hours from now)
+            const endTime = countdownElement.getAttribute('data-end-time') || 
+                           new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+            countdownElement.setAttribute('data-end-time', endTime);
+            
+            // Update countdown every second
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+        }
+        
+        // Enable tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+        
+        // Initialize validation on page load
+        validateVotes();
+        
+        // Also initialize ticket validation if ticket form exists
+        if (document.getElementById('ticketVoteForm')) {
+            validateTicketVotes();
+        }
+        
+        // Add event listeners to update confirmation modals when they are shown
+        const confirmVoteModal = document.getElementById('confirmVoteModal');
+        if (confirmVoteModal) {
+            confirmVoteModal.addEventListener('show.bs.modal', function () {
+                updateConfirmationModal();
+            });
+        }
+        
+        const confirmTicketVoteModal = document.getElementById('confirmTicketVoteModal');
+        if (confirmTicketVoteModal) {
+            confirmTicketVoteModal.addEventListener('show.bs.modal', function () {
+                const selectedRadio = document.querySelector('input[name="ticketId"]:checked');
+                if (selectedRadio) {
+                    updateTicketConfirmationModal(selectedRadio.value);
+                }
+            });
+        }
+    });
+    
+    // Auto-hide alerts after 5 seconds
+    window.setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        });
+    }, 5000);
+</script>
+
+</body>
+</html>

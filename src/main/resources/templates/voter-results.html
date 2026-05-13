@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Election Results - Voter Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --primary-light: #eef2ff;
+            --secondary-color: #3f37c9;
+            --accent-color: #4cc9f0;
+            --success-color: #4caf50;
+            --danger-color: #f72585;
+            --warning-color: #ffbe0b;
+            --dark-color: #2b2d42;
+            --light-color: #f8f9ff;
+            --gray-color: #adb5bd;
+        }
+        
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--light-color);
+            color: var(--dark-color);
+        }
+        
+        /* Navbar */
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 0.8rem 2rem;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.6rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+        
+        .user-profile:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        .results-container {
+            margin: 2rem 0;
+            padding: 2rem;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .results-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .election-title {
+            color: var(--primary-color);
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+        
+        .election-status {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .status-running {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .status-ended {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .stats-box {
+            background: linear-gradient(135deg, #f8f9ff 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 1rem 2rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            min-width: 140px;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 0.5rem 0;
+        }
+        
+        .stat-label {
+            font-size: 0.85em;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Section Titles */
+        .section-title {
+            color: var(--dark-color);
+            font-weight: 700;
+            margin: 2rem 0 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 3px solid var(--primary-color);
+            display: inline-block;
+        }
+        
+        .section-title i {
+            margin-right: 0.5rem;
+            color: var(--primary-color);
+        }
+        
+        /* Ticket Results */
+        .ticket-card {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .ticket-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.15);
+        }
+        
+        .ticket-card.winner {
+            border-color: var(--success-color);
+            background: linear-gradient(135deg, #f0fff4 0%, #e8f5e9 100%);
+        }
+        
+        .ticket-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .candidate-info {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+        }
+        
+        .candidate-photo {
+            width: 70px;
+            height: 70px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-right: 1rem;
+            border: 2px solid #dee2e6;
+        }
+        
+        .candidate-photo-placeholder {
+            width: 70px;
+            height: 70px;
+            border-radius: 8px;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.5rem;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .candidate-details {
+            flex: 1;
+        }
+        
+        .candidate-position {
+            font-size: 0.75rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        
+        .candidate-name {
+            font-weight: 700;
+            color: var(--dark-color);
+            font-size: 1.1rem;
+        }
+        
+        .candidate-party {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: var(--primary-light);
+            color: var(--primary-color);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .vote-info {
+            text-align: center;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            min-width: 120px;
+        }
+        
+        .vote-count {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark-color);
+        }
+        
+        .vote-percentage {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .winner-badge {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: 1rem;
+        }
+        
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            margin: 0.75rem 0;
+            height: 12px;
+            overflow: hidden;
+        }
+        
+        .progress-bar-custom {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            border-radius: 10px;
+            transition: width 0.6s ease;
+        }
+        
+        /* Results Table */
+        .results-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 1rem 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .results-table th, .results-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .results-table th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .results-table th:first-child {
+            border-top-left-radius: 12px;
+        }
+        
+        .results-table th:last-child {
+            border-top-right-radius: 12px;
+        }
+        
+        .results-table tr:last-child td:first-child {
+            border-bottom-left-radius: 12px;
+        }
+        
+        .results-table tr:last-child td:last-child {
+            border-bottom-right-radius: 12px;
+        }
+        
+        .position-header {
+            background-color: #f8f9fa !important;
+            font-size: 1.1em;
+            font-weight: 700;
+            color: var(--dark-color) !important;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .candidate-row:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: #6c757d;
+        }
+        
+        .no-results i {
+            font-size: 3rem;
+            color: #dee2e6;
+            margin-bottom: 1rem;
+        }
+        
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            margin-top: 2rem;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .back-button:hover {
+            background-color: #375a7f;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin: 2rem 0;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            color: #dee2e6;
+            margin-bottom: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .candidate-info {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .candidate-photo, .candidate-photo-placeholder {
+                margin-right: 0;
+                margin-bottom: 0.75rem;
+            }
+            
+            .stats-box {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .stat-item {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/voter/dashboard">
+                <i class="fas fa-vote-yea"></i>
+                <span>E-Voting</span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/voter/dashboard">
+                            <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/voter/results">
+                            <i class="fas fa-poll me-1"></i> Results
+                        </a>
+                    </li>
+                </ul>
+                <div class="navbar-nav ms-auto">
+                    <a href="/voter/profile" class="user-profile text-decoration-none">
+                        <i class="fas fa-user"></i>
+                        <span sec:authentication="name">User</span>
+                    </a>
+                    <form th:action="@{/logout}" method="post" class="ms-3">
+                        <button type="submit" class="btn btn-outline-light btn-sm d-flex align-items-center">
+                            <i class="fas fa-sign-out-alt me-1"></i>
+                            <span class="d-none d-sm-inline">Logout</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="container">
+            <!-- Error/Info Messages -->
+            <div th:if="${message}" class="alert alert-info mt-4" th:text="${message}">
+                No election results available yet.
+            </div>
+            
+            <div th:if="${election != null}">
+                <div class="results-container">
+                    <div class="results-header">
+                        <h2 class="election-title">
+                            <i class="fas fa-poll me-2"></i>
+                            <span th:text="${election.name}">Election Name</span>
+                        </h2>
+                        
+                        <div th:class="${election.active and !election.completed and election.endTime.isAfter(now) ? 'election-status status-running' : 'election-status status-ended'}">
+                            <span th:if="${election.active and !election.completed and election.endTime.isAfter(now)}">
+                                <i class="fas fa-circle-notch fa-spin me-2"></i>LIVE RESULTS - VOTING IN PROGRESS
+                            </span>
+                            <span th:if="${election.completed or (election.endTime != null and election.endTime.isBefore(now))}">
+                                <i class="fas fa-flag-checkered me-2"></i>FINAL RESULTS - ELECTION ENDED
+                            </span>
+                        </div>
+                        
+                        <div class="stats-box">
+                            <div class="stat-item">
+                                <div class="stat-value" th:text="${totalVotes}">0</div>
+                                <div class="stat-label">Total Votes</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" th:text="${tickets != null ? tickets.size() : 0}">0</div>
+                                <div class="stat-label">Tickets</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" th:text="${tickets != null ? tickets.size() * 2 : 0}">0</div>
+                                <div class="stat-label">Candidates</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Ticket Results Section (President & Vice President) -->
+                    <div th:if="${tickets != null and !tickets.isEmpty()}" class="ticket-results-section">
+                        <h4 class="section-title">
+                            <i class="fas fa-users"></i>
+                            President & Vice President Election
+                        </h4>
+                        
+                        <div th:each="ticket : ${tickets}" 
+                             class="ticket-card"
+                             th:classappend="${winningTicket != null and winningTicket.id == ticket.id} ? 'winner'">
+                            <div class="d-flex justify-content-between align-items-start flex-wrap">
+                                <div class="ticket-name">
+                                    <span th:text="${ticket.name}">Ticket Name</span>
+                                    <span th:if="${winningTicket != null and winningTicket.id == ticket.id}" class="winner-badge">
+                                        <i class="fas fa-trophy"></i> Winner
+                                    </span>
+                                </div>
+                                
+                                <div class="vote-info">
+                                    <div class="vote-count" th:text="${ticket.voteCount}">0</div>
+                                    <div class="vote-percentage">
+                                        <span th:text="${totalVotes > 0 ? #numbers.formatDecimal((ticket.voteCount * 100.0 / totalVotes), 1, 1) : '0.0'}">0</span>%
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="progress-container">
+                                <div class="progress-bar-custom" 
+                                     th:style="'width: ' + ${totalVotes > 0 ? (ticket.voteCount * 100.0 / totalVotes) : 0} + '%'">
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-3">
+                                <!-- President -->
+                                <div class="col-md-6">
+                                    <div class="candidate-info">
+                                        <div th:if="${ticket.presidentPhotoUrl}" class="candidate-photo">
+                                            <img th:src="@{'/uploads/' + ${ticket.presidentPhotoUrl}}" 
+                                                 class="candidate-photo"
+                                                 alt="President photo">
+                                        </div>
+                                        <div th:unless="${ticket.presidentPhotoUrl}" class="candidate-photo-placeholder">
+                                            <span th:with="nameParts=${#strings.arraySplit(#strings.trim(ticket.presidentName), ' ')}"
+                                                  th:text="${#strings.toUpperCase(#strings.substring(nameParts[0], 0, 1))}">P</span>
+                                        </div>
+                                        <div class="candidate-details">
+                                            <div class="candidate-position">
+                                                <i class="fas fa-user-tie me-1"></i> PRESIDENT
+                                            </div>
+                                            <div class="candidate-name" th:text="${ticket.presidentName}">President Name</div>
+                                            <span class="candidate-party" th:text="${ticket.presidentParty}">Party</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Vice President -->
+                                <div class="col-md-6">
+                                    <div class="candidate-info">
+                                        <div th:if="${ticket.vicePresidentPhotoUrl}" class="candidate-photo">
+                                            <img th:src="@{'/uploads/' + ${ticket.vicePresidentPhotoUrl}}" 
+                                                 class="candidate-photo"
+                                                 alt="Vice President photo">
+                                        </div>
+                                        <div th:unless="${ticket.vicePresidentPhotoUrl}" class="candidate-photo-placeholder" style="background-color: #6c757d;">
+                                            <span th:with="nameParts=${#strings.arraySplit(#strings.trim(ticket.vicePresidentName), ' ')}"
+                                                  th:text="${#strings.toUpperCase(#strings.substring(nameParts[0], 0, 1))}">VP</span>
+                                        </div>
+                                        <div class="candidate-details">
+                                            <div class="candidate-position">
+                                                <i class="fas fa-user-friends me-1"></i> VICE PRESIDENT
+                                            </div>
+                                            <div class="candidate-name" th:text="${ticket.vicePresidentName}">Vice President Name</div>
+                                            <span class="candidate-party" th:text="${ticket.vicePresidentParty}">Party</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Individual candidate results have been removed - only showing Candidate Tickets -->
+                    
+                    <!-- No Results -->
+                    <div th:if="${tickets == null or tickets.isEmpty()}" class="no-results">
+                        <i class="fas fa-chart-bar d-block mb-3"></i>
+                        <h5>No Results Available</h5>
+                        <p>No candidate tickets have been registered for this election yet.</p>
+                    </div>
+                    
+                    <!-- Back Button -->
+                    <div class="text-center">
+                        <a href="/voter/dashboard" class="back-button">
+                            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- No Election -->
+            <div th:if="${election == null}" class="results-container">
+                <div class="no-results">
+                    <i class="fas fa-calendar-times d-block mb-3"></i>
+                    <h5>No Election Available</h5>
+                    <p>There is no active election at the moment. Please check back later.</p>
+                    <a href="/voter/dashboard" class="back-button">
+                        <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="bg-white py-4 mt-auto">
+        <div class="container">
+            <div class="text-center text-muted small">
+                <div class="mb-2">
+                    <a href="#" class="text-muted me-3">About</a>
+                    <a href="#" class="text-muted me-3">Privacy</a>
+                    <a href="#" class="text-muted me-3">Terms</a>
+                    <a href="#" class="text-muted">Contact</a>
+                </div>
+                <div>
+                    &copy; 2023 E-Voting System. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Add animation to progress bars when they come into view
+        document.addEventListener('DOMContentLoaded', function() {
+            const progressBars = document.querySelectorAll('.progress-bar-custom');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.width = entry.target.style.width;
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+            
+            progressBars.forEach(bar => {
+                // Store the original width
+                const width = bar.style.width;
+                // Reset width for animation
+                bar.style.width = '0';
+                // Trigger reflow
+                void bar.offsetWidth;
+                // Set back to original width with animation
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 100);
+                // Observe for intersection
+                observer.observe(bar);
+            });
+        });
+    </script>
+</body>
+</html>
+

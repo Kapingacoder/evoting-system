@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Election Control - E-Voting System</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .control-container {
+            background-color: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border: 1px solid #e9ecef;
+        }
+        .control-container h2 {
+            color: #1e3a5f;
+            margin-bottom: 20px;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        .election-details {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
+        }
+        .election-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e3a5f;
+            margin-bottom: 10px;
+        }
+        .election-description {
+            color: #6c757d;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .election-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .election-info p {
+            margin: 8px 0;
+            color: #495057;
+        }
+        .election-info strong {
+            color: #1e3a5f;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        .status-running {
+            background-color: #d1e7dd;
+            color: #0a3622;
+        }
+        .status-stopped {
+            background-color: #f8d7da;
+            color: #58151c;
+        }
+        .status-scheduled {
+            background-color: #fff3cd;
+            color: #664d03;
+        }
+        .status-not-started {
+            background-color: #e2e3e5;
+            color: #41464b;
+        }
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .control-buttons form {
+            display: inline;
+        }
+        .control-buttons button {
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .control-buttons button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>E-Voting System</h2>
+            <p>Administrator Panel</p>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a th:href="@{/admin/dashboard}">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </a>
+            <a th:href="@{/admin/voters}">
+                <i class="fas fa-users"></i>
+                <span>Voter Management</span>
+            </a>
+            <a th:href="@{/admin/candidates}">
+                <i class="fas fa-user-tie"></i>
+                <span>Candidate Management</span>
+            </a>
+            <a th:href="@{/admin/election}" class="active">
+                <i class="fas fa-vote-yea"></i>
+                <span>Election Control</span>
+            </a>
+            <a th:href="@{/admin/election/results}">
+                <i class="fas fa-chart-bar"></i>
+                <span>Results</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a th:href="@{/logout}">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Main content -->
+    <div class="main-content">
+        <header>
+            <h1>Election Control</h1>
+        </header>
+        
+        <div class="content">
+            <!-- Flash Messages -->
+            <div th:if="${success != null}" class="alert alert-success">
+                <i class="fas fa-check-circle me-2"></i>
+                <span th:text="${success}"></span>
+            </div>
+            
+            <div th:if="${error != null}" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <span th:text="${error}"></span>
+            </div>
+
+            <!-- Election Details Section -->
+            <div class="control-container" th:if="${election != null and election.id != null}">
+                <h2>Current Election Details</h2>
+                <div class="election-details">
+                    <div class="election-name" th:text="${election.name}">Election Name</div>
+                    <div class="election-description" th:text="${election.description != null and !election.description.isEmpty() ? election.description : 'No description provided'}">
+                        Election description goes here
+                    </div>
+                    
+                    <!-- Status Display -->
+                    <div th:if="${election.active and not election.completed and isVotingOpen}">
+                        <span class="status-badge status-running">
+                            <i class="fas fa-play-circle me-2"></i>ELECTION IS CURRENTLY RUNNING
+                        </span>
+                    </div>
+                    <div th:if="${election.completed or (!isVotingOpen and election.active)}">
+                        <span class="status-badge status-stopped">
+                            <i class="fas fa-stop-circle me-2"></i>ELECTION HAS ENDED
+                        </span>
+                    </div>
+                    <div th:if="${election.startTime != null and election.startTime.isAfter(now) and !election.active}">
+                        <span class="status-badge status-scheduled">
+                            <i class="fas fa-clock me-2"></i>ELECTION IS SCHEDULED
+                        </span>
+                    </div>
+                    <div th:if="${!election.active and !election.completed and election.startTime != null and election.startTime.isBefore(now)}">
+                        <span class="status-badge status-not-started">
+                            <i class="fas fa-exclamation-circle me-2"></i>ELECTION NOT STARTED
+                        </span>
+                    </div>
+                    
+                    <div class="election-info">
+                        <p>
+                            <strong><i class="fas fa-calendar-alt me-2"></i>Start Time:</strong> 
+                            <span th:text="${election.startTime != null ? #temporals.format(election.startTime, 'yyyy-MM-dd HH:mm') : 'Not Set'}"></span>
+                        </p>
+                        <p>
+                            <strong><i class="fas fa-calendar-check me-2"></i>End Time:</strong> 
+                            <span th:text="${election.endTime != null ? #temporals.format(election.endTime, 'yyyy-MM-dd HH:mm') : 'Not Set'}"></span>
+                        </p>
+                        <p>
+                            <strong><i class="fas fa-flag me-2"></i>Status:</strong> 
+                            <span th:text="${election.active ? 'Active' : (election.completed ? 'Completed' : 'Inactive')}"></span>
+                        </p>
+                    </div>
+                    
+                    <!-- Manual Control Buttons -->
+                    <div class="control-buttons" th:if="${election != null and election.id != null}">
+                        <form th:action="@{/admin/election/start}" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf != null}" />
+                            <button type="submit" class="btn btn-success" th:disabled="${election.active or election.completed}">
+                                <i class="fas fa-play me-2"></i>Start Election Now
+                            </button>
+                        </form>
+                        <form th:action="@{/admin/election/end}" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf != null}" />
+                            <button type="submit" class="btn btn-danger" th:disabled="${!election.active or election.completed}">
+                                <i class="fas fa-stop me-2"></i>Stop Election Now
+                            </button>
+                        </form>
+                        <form th:action="@{/admin/election/reset}" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf != null}" />
+                            <button type="submit" class="btn btn-secondary" onclick="return confirm('Are you sure you want to reset the election? All votes will be cleared.')">
+                                <i class="fas fa-redo me-2"></i>Reset Election
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div th:if="${election == null or election.id == null}" class="control-container">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No election has been created yet. Schedule a new election below.
+                </div>
+            </div>
+
+            <!-- Schedule Election Form -->
+            <div class="control-container">
+                <h2>Schedule New Election</h2>
+                <form th:action="@{/admin/election/schedule}" method="post" th:object="${election}">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf != null}" />
+                    
+                    <div class="form-group">
+                        <label for="name"><i class="fas fa-heading me-2"></i>Election Name</label>
+                        <input type="text" id="name" name="name" placeholder="e.g., 2026 General Election" 
+                               th:value="${election != null ? election.name : ''}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description"><i class="fas fa-align-left me-2"></i>Description</label>
+                        <textarea id="description" name="description" placeholder="Enter election description..." 
+                                  th:text="${election != null and election.description != null ? election.description : ''}" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="startTime"><i class="fas fa-play me-2"></i>Start Time</label>
+                            <input type="datetime-local" id="startTime" name="startTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="endTime"><i class="fas fa-stop me-2"></i>End Time</label>
+                            <input type="datetime-local" id="endTime" name="endTime" required>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-calendar-plus me-2"></i>Schedule Election
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Election Results - E-Voting System</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .results-container {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+        .results-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .results-header h2 {
+            color: #1e3a5f;
+            font-size: 1.75rem;
+            margin-bottom: 10px;
+        }
+        .total-votes {
+            font-size: 1.1rem;
+            color: #495057;
+        }
+        .total-votes strong {
+            color: #198754;
+            font-size: 1.3rem;
+        }
+        
+        /* Winner Ticket Section */
+        .winner-ticket-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            color: white;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .winner-ticket-section h3 {
+            margin: 0 0 20px 0;
+            font-size: 1.5rem;
+            opacity: 0.9;
+        }
+        .winner-ticket-name {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .winner-ticket-candidates {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .winner-ticket-candidate {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            min-width: 180px;
+        }
+        .winner-ticket-photo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            background: rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .winner-ticket-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .winner-ticket-photo i {
+            font-size: 30px;
+            opacity: 0.7;
+        }
+        .winner-ticket-candidate h4 {
+            margin: 5px 0;
+            font-size: 1.1rem;
+        }
+        .winner-ticket-candidate .position-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+        }
+        .winner-ticket-votes {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.25);
+            padding: 10px 25px;
+            border-radius: 25px;
+            display: inline-block;
+        }
+        .no-winner-yet {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        /* Ticket Results List */
+        .ticket-results-section {
+            margin-bottom: 30px;
+        }
+        .ticket-result-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            border: 2px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s ease;
+        }
+        .ticket-result-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .ticket-result-card.winner {
+            border-color: #198754;
+            background: linear-gradient(to right, #d1e7dd, #fff);
+        }
+        .ticket-result-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .ticket-result-photo {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .ticket-result-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .ticket-result-photo i {
+            font-size: 24px;
+            color: #adb5bd;
+        }
+        .ticket-result-names h4 {
+            margin: 0;
+            color: #1e3a5f;
+            font-size: 1.1rem;
+        }
+        .ticket-result-names p {
+            margin: 5px 0 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .ticket-result-stats {
+            text-align: right;
+        }
+        .ticket-result-votes {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #198754;
+        }
+        .ticket-result-percentage {
+            color: #6c757d;
+            font-size: 0.95rem;
+        }
+        .winner-badge {
+            display: inline-block;
+            background-color: #198754;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 10px;
+            text-transform: uppercase;
+        }
+        
+        /* Old position-based results */
+        .position-section {
+            margin-bottom: 30px;
+        }
+        .position-header {
+            background-color: #1e3a5f;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 8px 8px 0 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0;
+        }
+        .results-table th, .results-table td {
+            padding: 15px 20px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .results-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+            white-space: nowrap;
+        }
+        .results-table tbody tr {
+            transition: background-color 0.2s ease;
+        }
+        .results-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        .results-table tbody tr.winner-row {
+            background-color: #d1e7dd;
+        }
+        .results-table tbody tr.winner-row:hover {
+            background-color: #c3e6cb;
+        }
+        .candidate-name {
+            font-weight: 500;
+            color: #1e3a5f;
+        }
+        .vote-count {
+            font-weight: 700;
+            color: #198754;
+            font-size: 1.1rem;
+        }
+        .vote-percentage {
+            color: #6c757d;
+            font-size: 0.95rem;
+        }
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #1e3a5f;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+        }
+        .back-button:hover {
+            background-color: #152a45;
+            color: white;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>E-Voting System</h2>
+            <p>Administrator Panel</p>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a th:href="@{/admin/dashboard}">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </a>
+            <a th:href="@{/admin/voters}">
+                <i class="fas fa-users"></i>
+                <span>Voter Management</span>
+            </a>
+            <a th:href="@{/admin/candidates}">
+                <i class="fas fa-user-tie"></i>
+                <span>Candidate Management</span>
+            </a>
+            <a th:href="@{/admin/election}">
+                <i class="fas fa-vote-yea"></i>
+                <span>Election Control</span>
+            </a>
+            <a th:href="@{/admin/election/results}" class="active">
+                <i class="fas fa-chart-bar"></i>
+                <span>Results</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a th:href="@{/logout}">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Main content -->
+    <div class="main-content">
+        <header>
+            <h1>Election Results</h1>
+        </header>
+        
+        <div class="content">
+            <div class="results-container">
+                <div class="results-header">
+                    <h2>Election Results</h2>
+                    <div th:if="${election != null}">
+                        <span th:if="${election.completed or (election.endTime != null and election.endTime.isBefore(now))}" 
+                              class="status-badge status-stopped" style="margin-bottom: 15px; display: inline-block;">
+                            <i class="fas fa-flag-checkered me-2"></i>ELECTION HAS ENDED
+                        </span>
+                        <span th:if="${election.active and !election.completed}" 
+                              class="status-badge status-running" style="margin-bottom: 15px; display: inline-block;">
+                            <i class="fas fa-chart-line me-2"></i>LIVE RESULTS - ELECTION IN PROGRESS
+                        </span>
+                    </div>
+                    <p class="total-votes">Total Votes Cast: <strong th:text="${totalVotes}">0</strong></p>
+                </div>
+                
+                <!-- Winner Ticket Section (President & Vice President) -->
+                <div th:if="${not tickets.isEmpty()}" class="winner-ticket-section">
+                    <h3><i class="fas fa-trophy me-2"></i>Winning Ticket</h3>
+                    <div th:if="${winningTicket != null}">
+                        <div class="winner-ticket-name" th:text="${winningTicket.name}">Ticket Name</div>
+                        <div class="winner-ticket-candidates">
+                            <div class="winner-ticket-candidate">
+                                <div class="winner-ticket-photo">
+                                    <img th:if="${winningTicket.presidentPhotoUrl}" th:src="@{'/uploads/' + ${winningTicket.presidentPhotoUrl}}" alt="President">
+                                    <i th:unless="${winningTicket.presidentPhotoUrl}" class="fas fa-user"></i>
+                                </div>
+                                <h4 th:text="${winningTicket.presidentName}">President Name</h4>
+                                <p class="position-label">President</p>
+                            </div>
+                            <div class="winner-ticket-candidate">
+                                <div class="winner-ticket-photo">
+                                    <img th:if="${winningTicket.vicePresidentPhotoUrl}" th:src="@{'/uploads/' + ${winningTicket.vicePresidentPhotoUrl}}" alt="Vice President">
+                                    <i th:unless="${winningTicket.vicePresidentPhotoUrl}" class="fas fa-user"></i>
+                                </div>
+                                <h4 th:text="${winningTicket.vicePresidentName}">Vice President Name</h4>
+                                <p class="position-label">Vice President</p>
+                            </div>
+                        </div>
+                        <div class="winner-ticket-votes">
+                            <span th:text="${totalTicketVotes > 0 ? #numbers.formatDecimal((winningTicket.voteCount * 100.0 / totalTicketVotes), 1, 1) : '0'}">0</span>% - 
+                            <span th:text="${winningTicket.voteCount}">0</span> votes
+                        </div>
+                    </div>
+                    <div th:if="${winningTicket == null}" class="no-winner-yet">
+                        No votes cast yet
+                    </div>
+                </div>
+                
+                <!-- Ticket Results List -->
+                <div th:if="${not tickets.isEmpty()}" class="ticket-results-section">
+                    <h3 style="color: #1e3a5f; margin-bottom: 15px;"><i class="fas fa-list me-2"></i>All Candidate Tickets</h3>
+                    <div th:each="ticket, stat : ${tickets}" 
+                         class="ticket-result-card" 
+                         th:classappend="${stat.index == 0 and ticket.voteCount > 0} ? 'winner' : ''">
+                        <div class="ticket-result-info">
+                            <div class="ticket-result-photo">
+                                <img th:if="${ticket.presidentPhotoUrl}" th:src="@{'/uploads/' + ${ticket.presidentPhotoUrl}}" alt="President">
+                                <i th:unless="${ticket.presidentPhotoUrl}" class="fas fa-user"></i>
+                            </div>
+                            <div class="ticket-result-names">
+                                <h4>
+                                    <span th:text="${ticket.presidentName}">President</span> and 
+                                    <span th:text="${ticket.vicePresidentName}">Vice President</span>
+                                    <span th:if="${stat.index == 0 and ticket.voteCount > 0}" class="winner-badge">
+                                        <i class="fas fa-trophy me-1"></i>WINNER
+                                    </span>
+                                </h4>
+                                <p th:text="${ticket.name}">Ticket Name</p>
+                            </div>
+                        </div>
+                        <div class="ticket-result-stats">
+                            <div class="ticket-result-votes" th:text="${ticket.voteCount}">0</div>
+                            <div class="ticket-result-percentage" 
+                                 th:text="${totalTicketVotes > 0 ? #numbers.formatDecimal((ticket.voteCount * 100.0 / totalTicketVotes), 1, 1) + '%' : '0%'}">0%</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Individual candidate results have been removed - only showing Candidate Tickets -->
+                
+                <div style="text-align: center; margin-top: 30px;">
+                    <a th:href="@{/admin/dashboard}" class="back-button">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

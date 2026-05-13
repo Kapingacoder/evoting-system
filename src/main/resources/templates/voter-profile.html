@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Voter Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding: 10px 0;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .nav-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #fff;
+            color: #2c3e50;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .nav-button i {
+            margin-right: 8px;
+            font-size: 1rem;
+        }
+        
+        .nav-button:hover {
+            background-color: #f1f3f5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .nav-button.active {
+            background-color: #3498db;
+            color: white;
+            border-color: #2980b9;
+        }
+        
+        .nav-button.logout-btn {
+            background-color: #fff5f5;
+            color: #e74c3c;
+            border-color: #ffd3d3;
+        }
+        
+        .nav-button.logout-btn:hover {
+            background-color: #ffe3e3;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-buttons {
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 8px;
+            }
+            
+            .nav-button {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+            
+            .nav-button i {
+                margin-right: 6px;
+            }
+        }
+    </style>
+    <style>
+        .profile-container {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 30px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e9ecef;
+        }
+        
+        .profile-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .profile-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            color: white;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 4px solid white;
+            outline: 2px solid #e9ecef;
+        }
+        
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .profile-name {
+            font-size: 2em;
+            margin: 15px 0 5px;
+            color: #2c3e50;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+        
+        .profile-email {
+            color: #6c757d;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        
+        .profile-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 30px 0;
+            padding: 20px 0;
+            border-top: 1px solid #f0f0f0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: 600;
+            color: #3498db;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+        
+        .profile-section {
+            margin: 30px 0;
+        }
+        
+        .section-title {
+            font-size: 1.3em;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .info-item {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        }
+        
+        .info-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border-color: #3498db;
+        }
+        
+        .info-label {
+            font-size: 0.85em;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        
+        .voting-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .status-completed {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .status-pending {
+            background-color: #fff3e0;
+            color: #ef6c00;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95em;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+            box-shadow: 0 2px 5px rgba(52, 152, 219, 0.3);
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+        }
+        
+        .btn-outline {
+            background: none;
+            border: 1px solid #3498db;
+            color: #3498db;
+            transition: all 0.3s;
+        }
+        
+        .btn-outline:hover {
+            background-color: #f8fbff;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+        }
+        
+        .election-card {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+        }
+        
+        .election-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border-color: #3498db;
+        }
+        
+        .election-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .election-details {
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+        
+        .election-details div {
+            margin-bottom: 5px;
+        }
+        
+        .election-details i {
+            width: 20px;
+            text-align: center;
+            margin-right: 8px;
+            color: #6c757d;
+        }
+        
+        .no-election {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        @media (max-width: 768px) {
+            .profile-stats {
+                flex-direction: column;
+                gap: 20px;
+                padding: 15px 0;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .profile-avatar {
+                width: 120px;
+                height: 120px;
+                font-size: 48px;
+            }
+            
+            .profile-name {
+                font-size: 1.6em;
+            }
+            
+            .btn {
+                padding: 8px 15px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-content">
+        <header>
+            <div class="nav-buttons">
+                <a href="/voter/dashboard" class="nav-button">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a href="/voter/results" class="nav-button">
+                    <i class="fas fa-chart-bar"></i> View Results
+                </a>
+                <a href="/voter/profile" class="nav-button active">
+                    <i class="fas fa-user"></i> My Profile
+                </a>
+                <a href="/logout" class="nav-button logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+            <h1>My Profile</h1>
+        </header>
+        
+        <div class="content">
+            <div class="profile-container">
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <h2 class="profile-name" th:text="${user.username}">johndoe</h2>
+                    
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <div class="stat-value" th:text="${user.username}">username</div>
+                            <div class="stat-label">Username</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" th:text="${user.role}">ROLE_USER</div>
+                            <div class="stat-label">Role</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">
+                                <span th:class="${hasVoted ? 'voting-status status-completed' : 'voting-status status-pending'}">
+                                    <i th:class="${hasVoted ? 'fas fa-check-circle' : 'fas fa-hourglass-half'}"></i>
+                                    <span th:text="${hasVoted ? 'Voted' : 'Not Voted'}">Status</span>
+                                </span>
+                            </div>
+                            <div class="stat-label">Voting Status</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="profile-section">
+                    <h3 class="section-title">Personal Information</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Username</div>
+                            <div class="info-value" th:text="${user.username}">johndoe</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Account Role</div>
+                            <div class="info-value" th:text="${user.role}">ROLE_USER</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Voting Status</div>
+                            <div class="info-value">
+                                <span th:if="${user.voted}" class="status-completed" style="padding: 3px 10px; border-radius: 12px;">
+                                    <i class="fas fa-check-circle"></i> Voted
+                                </span>
+                                <span th:unless="${user.voted}" class="status-pending" style="padding: 3px 10px; border-radius: 12px;">
+                                    <i class="fas fa-hourglass-half"></i> Not Voted
+                                </span>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Username</div>
+                            <div class="info-value" th:text="${user.username}">username</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Account Role</div>
+                            <div class="info-value" th:text="${user.role}">ROLE_USER</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Account Status</div>
+                            <div class="info-value">
+                                <span class="status-active" style="padding: 3px 10px; border-radius: 12px;">
+                                    <i class="fas fa-check-circle"></i> Active
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="profile-section">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 class="section-title" style="margin: 0;">Current Election</h3>
+                        <a th:if="${election != null}" th:href="@{/voter/results}" class="btn btn-outline">
+                            <i class="fas fa-chart-bar"></i> View Results
+                        </a>
+                    </div>
+                    
+                    <div th:if="${election != null}" class="election-card">
+                        <h4 class="election-title" th:text="${election.name}">Presidential Election 2023</h4>
+                        <div class="election-details">
+                            <div>
+                                <i class="fas fa-info-circle"></i>
+                                <span th:text="${election.description ?: 'No description available'}">Election for the next president of the country</span>
+                            </div>
+                            <div>
+                                <i class="far fa-calendar-alt"></i>
+                                <span th:if="${election.startTime != null and election.endTime != null}">
+                                    <span th:text="${#temporals.format(election.startTime, 'MMM d, yyyy hh:mm a')}">Nov 1, 2023 08:00 AM</span> - 
+                                    <span th:text="${#temporals.format(election.endTime, 'MMM d, yyyy hh:mm a')}">Nov 1, 2023 06:00 PM</span>
+                                </span>
+                                <span th:if="${election.startTime == null or election.endTime == null}">
+                                    Election dates not set
+                                </span>
+                            </div>
+                            <div>
+                                <i class="fas fa-vote-yea"></i>
+                                <span>Your voting status: </span>
+                                <span th:if="${hasVoted}" class="status-completed" style="padding: 2px 8px; border-radius: 10px;">
+                                    <i class="fas fa-check"></i> Voted
+                                </span>
+                                <span th:unless="${hasVoted}" class="status-pending" style="padding: 2px 8px; border-radius: 10px;">
+                                    <i class="fas fa-hourglass-half"></i> Not Voted
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 15px;">
+                            <a th:if="${!hasVoted}" href="/voter/dashboard" class="btn btn-primary">
+                                <i class="fas fa-vote-yea"></i> Cast Your Vote
+                            </a>
+                            <a th:if="${hasVoted}" href="/voter/results" class="btn btn-primary">
+                                <i class="fas fa-chart-bar"></i> View Results
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div th:if="${election == null}" class="no-election">
+                        <i class="fas fa-info-circle" style="font-size: 2em; margin-bottom: 10px; color: #6c757d;"></i>
+                        <p>No active election at the moment.</p>
+                    </div>
+                </div>
+                
+                <div class="profile-section" style="text-align: center; padding-top: 20px; border-top: 1px solid #eee;">
+                    <a href="#" class="btn btn-outline">
+                        <i class="fas fa-edit"></i> Edit Profile
+                    </a>
+                    <a href="/voter/change-password" class="btn btn-outline" style="margin-left: 10px;">
+                        <i class="fas fa-key"></i> Change Password
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

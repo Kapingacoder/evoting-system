@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voter Registration - E-Voting System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4e73df;
+            --primary-dark: #2e59d9;
+            --danger: #e74a3b;
+            --light: #f8f9fa;
+        }
+        
+        body { 
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100vh;
+            background-image: 
+                linear-gradient(rgba(78, 115, 223, 0.7), rgba(34, 74, 190, 0.8)),
+                url("https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80");
+            background-size: 100% auto;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        
+        .top-bar {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        
+        .home-btn {
+            display: inline-flex;
+            align-items: center;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+        
+        .home-btn:hover {
+            color: var(--primary-dark);
+            background-color: rgba(78, 115, 223, 0.1);
+            transform: translateX(-3px);
+        }
+        
+        .home-btn i {
+            margin-right: 8px;
+            font-size: 1.1rem;
+        }
+        
+        .registration-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 480px;
+            padding: 2.5rem;
+        }
+        
+        .registration-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .registration-header h1 {
+            color: var(--primary);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        .form-control {
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d3e2;
+            border-radius: 0.5rem;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+        }
+        
+        .btn-register {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        
+        .btn-register:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        
+        .login-link {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        
+        .login-link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .password-strength {
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+        
+        .strength-meter {
+            height: 100%;
+            width: 0%;
+            background: #e74a3b;
+            transition: all 0.3s;
+        }
+        
+        .password-requirements {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-top: 0.5rem;
+        }
+        
+        .requirement {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .requirement.valid {
+            color: #28a745;
+        }
+        
+        .requirement.invalid {
+            color: #6c757d;
+        }
+        
+        .requirement i {
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation Bar with Home Button -->
+    <div class="top-bar">
+        <a href="/" class="home-btn">
+            <i class="fas fa-home"></i>
+            <span>Back to Home</span>
+        </a>
+    </div>
+    <div class="registration-card">
+        <div class="registration-header">
+            <h1>Voter Registration</h1>
+            <p>Set up your account password</p>
+        </div>
+        
+        <div th:if="${param.error}" class="error-message">
+            <i class="fas fa-exclamation-circle"></i>
+            <span th:text="${errorMessage}">Error message here</span>
+        </div>
+        
+        <div th:if="${param.success}" class="success-message">
+            <i class="fas fa-check-circle"></i>
+            <span>Registration successful! You can now <a href="/login">login</a> with your admission number and password.</span>
+        </div>
+        
+        <form th:action="@{/register}" method="post" id="registrationForm" th:unless="${param.success}">
+            <div class="form-group">
+                <label for="admissionNumber" class="form-label">Admission Number</label>
+                <input type="text" class="form-control" id="admissionNumber" name="admissionNumber" 
+                       th:value="${admissionNumber}" required autofocus>
+                <small class="text-muted">Enter your admission number to verify your identity</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="password" class="form-label">New Password</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+                <div class="password-strength">
+                    <div class="strength-meter" id="strengthMeter"></div>
+                </div>
+                <div class="password-requirements">
+                    <div class="requirement" id="lengthRequirement">
+                        <i class="fas fa-circle"></i>
+                        <span>At least 8 characters</span>
+                    </div>
+                    <div class="requirement" id="uppercaseRequirement">
+                        <i class="fas fa-circle"></i>
+                        <span>At least 1 uppercase letter</span>
+                    </div>
+                    <div class="requirement" id="numberRequirement">
+                        <i class="fas fa-circle"></i>
+                        <span>At least 1 number</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirmPassword" class="form-label">Confirm Password</label>
+                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                <small class="text-muted" id="passwordMatch"></small>
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" class="btn btn-register" id="registerButton" disabled>
+                    <i class="fas fa-user-plus me-2"></i>Register Account
+                </button>
+            </div>
+        </form>
+        
+        <div class="login-link">
+            Already have an account? <a href="/login">Login here</a>
+        </div>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            const passwordInput = $('#password');
+            const confirmPasswordInput = $('#confirmPassword');
+            const strengthMeter = $('#strengthMeter');
+            const registerButton = $('#registerButton');
+            
+            function checkPasswordStrength(password) {
+                let strength = 0;
+                const requirements = {
+                    length: password.length >= 8,
+                    uppercase: /[A-Z]/.test(password),
+                    number: /[0-9]/.test(password)
+                };
+                
+                // Update requirement indicators
+                $('#lengthRequirement').toggleClass('valid', requirements.length).toggleClass('invalid', !requirements.length);
+                $('#uppercaseRequirement').toggleClass('valid', requirements.uppercase).toggleClass('invalid', !requirements.uppercase);
+                $('#numberRequirement').toggleClass('valid', requirements.number).toggleClass('invalid', !requirements.number);
+                
+                // Calculate strength (0-100)
+                const requirementsMet = Object.values(requirements).filter(Boolean).length;
+                const totalRequirements = Object.keys(requirements).length;
+                const strengthPercentage = (requirementsMet / totalRequirements) * 100;
+                
+                // Update strength meter
+                strengthMeter.css('width', strengthPercentage + '%');
+                
+                // Update meter color based on strength
+                if (strengthPercentage < 33) {
+                    strengthMeter.css('background-color', '#e74a3b'); // Red
+                } else if (strengthPercentage < 66) {
+                    strengthMeter.css('background-color', '#f6c23e'); // Yellow
+                } else {
+                    strengthMeter.css('background-color', '#1cc88a'); // Green
+                }
+                
+                return requirementsMet === totalRequirements;
+            }
+            
+            function checkPasswordsMatch() {
+                const password = passwordInput.val();
+                const confirmPassword = confirmPasswordInput.val();
+                const match = password === confirmPassword;
+                
+                if (password && confirmPassword) {
+                    if (match) {
+                        $('#passwordMatch').html('<i class="fas fa-check text-success"></i> Passwords match').removeClass('text-danger').addClass('text-success');
+                    } else {
+                        $('#passwordMatch').html('<i class="fas fa-times text-danger"></i> Passwords do not match').removeClass('text-success').addClass('text-danger');
+                    }
+                } else {
+                    $('#passwordMatch').text('');
+                }
+                
+                return match;
+            }
+            
+            function validateForm() {
+                const isPasswordStrong = checkPasswordStrength(passwordInput.val());
+                const doPasswordsMatch = checkPasswordsMatch();
+                const hasAdmissionNumber = $('#admissionNumber').val().trim() !== '';
+                
+                // Enable/disable register button based on validation
+                registerButton.prop('disabled', !(isPasswordStrong && doPasswordsMatch && hasAdmissionNumber));
+            }
+            
+            // Event listeners
+            passwordInput.on('input', validateForm);
+            confirmPasswordInput.on('input', validateForm);
+            $('#admissionNumber').on('input', validateForm);
+            
+            // Initial validation
+            validateForm();
+        });
+    </script>
+</body>
+</html>
