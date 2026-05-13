@@ -2,7 +2,6 @@ package com.evoting.system.controller;
 
 import com.evoting.system.model.*;
 import com.evoting.system.repository.*;
-import com.evoting.system.service.CandidateTicketService;
 import com.evoting.system.repository.CandidateTicketRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

@@ -9,7 +9,6 @@ import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,11 +31,9 @@ public class BulkImportService {
     // Email is now optional, and no default password is set - users will set their own during registration
     
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
 
-    public BulkImportService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public BulkImportService(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
     }
 
     /**
@@ -337,14 +334,6 @@ public class BulkImportService {
         }
 
         return voters;
-    }
-    private String generateUsernameFromFullName(String fullName) {
-        if (fullName == null || fullName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Full name cannot be empty");
-        }
-        
-        // Convert to lowercase and replace spaces with dots
-        return fullName.trim().toLowerCase().replaceAll("\\s+", ".");
     }
 
     // Method removed as we're now creating users directly in the processVoters method

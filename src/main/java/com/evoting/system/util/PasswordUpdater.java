@@ -1,6 +1,5 @@
 package com.evoting.system.util;
 
-import com.evoting.system.model.User;
 import com.evoting.system.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
