@@ -4,6 +4,7 @@ WORKDIR /app
 
 COPY pom.xml .
 COPY mvnw* .
+COPY .mvn .mvn
 COPY src ./src
 
 RUN ./mvnw clean package -DskipTests
