@@ -24,6 +24,8 @@ public class ElectionService {
         return electionRepository.findFirstByOrderByIdAsc().orElseGet(() -> {
             Election newElection = new Election();
             newElection.setName("General Election");
+            newElection.setStartTime(LocalDateTime.now().plusDays(1));
+            newElection.setEndTime(LocalDateTime.now().plusDays(2));
             newElection.setActive(false);
             newElection.setCompleted(false);
             return electionRepository.save(newElection);
