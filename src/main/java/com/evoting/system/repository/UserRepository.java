@@ -33,4 +33,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     
     @Query("SELECT u FROM User u WHERE TRIM(LOWER(u.admissionNumber)) = TRIM(LOWER(:admissionNumber))")
     Optional<User> findByAdmissionNumberIgnoreCaseAndTrim(@Param("admissionNumber") String admissionNumber);
+
+    void deleteAllByRole(Role role);
 }

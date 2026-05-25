@@ -7,6 +7,8 @@ import com.evoting.system.repository.UserRepository;
 import com.evoting.system.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +31,9 @@ public class AuthController {
 
     @Autowired
     private SupportMessageRepository supportMessageRepository;
+
+    @Autowired
+    private JavaMailSender mailSender;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
@@ -79,27 +84,57 @@ public class AuthController {
 
     // POST /api/auth/forgot-password
     @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
+    public ResponseEntity<?> forgotPassword(
+            @RequestBody Map<String, String> request) {
         try {
             String admissionNumber = request.get("admissionNumber");
 
-            if (admissionNumber == null || admissionNumber.isEmpty()) {
-                return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Admission number inahitajika"));
+            // Tafuta user kwa admissionNumber AU username
+            User user = userRepository.findByAdmissionNumber(admissionNumber)
+                .orElse(null);
+
+            if (user == null) {
+                user = userRepository.findByUsername(admissionNumber)
+                    .orElse(null);
             }
 
-            User user = userRepository.findByAdmissionNumber(admissionNumber).orElse(null);
             if (user == null) {
-                return ResponseEntity.status(404)
+                return ResponseEntity.badRequest()
                     .body(Map.of("error", "Admission number haipatikani"));
             }
 
-            // TODO: Implement email sending logic here
-            // For now, just return success message
-            return ResponseEntity.ok(Map.of("message", "Password imetumwa kwa email yako!"));
+            if (user.getEmail() == null || user.getEmail().isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Akaunti hii haina email iliyosajiliwa"));
+            }
+
+            // Tengeneza password
+            String firstName = user.getFullName().split(" ")[0].toLowerCase();
+            String defaultPassword = firstName + "123";
+
+            // Tuma email — LAZIMA itumie mailSender
+            SimpleMailMessage mail = new SimpleMailMessage();
+            mail.setTo(user.getEmail());
+            mail.setSubject("Forgot Password — E-Voting System");
+            mail.setText(
+                "Habari " + user.getFullName() + ",\n\n" +
+                "Umesahau password yako.\n\n" +
+                "Taarifa zako za kuingia:\n" +
+                "Username: " + user.getAdmissionNumber() + "\n" +
+                "Password: " + defaultPassword + "\n\n" +
+                "Kama hukuhitaji hili — ignore ujumbe huu.\n\n" +
+                "Asante,\nMfumo wa E-Voting"
+            );
+            mailSender.send(mail);
+
+            return ResponseEntity.ok(Map.of(
+                "message", "Password imetumwa kwa email yako!"
+            ));
+
         } catch (Exception e) {
+            // Hii itaonyesha error halisi
             return ResponseEntity.status(500)
-                .body(Map.of("error", e.getMessage()));
+                .body(Map.of("error", "Imeshindwa: " + e.getMessage()));
         }
     }
 }

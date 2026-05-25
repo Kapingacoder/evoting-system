@@ -6,6 +6,7 @@ import com.evoting.system.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -76,5 +77,11 @@ public class UserService {
     public User getUserByUsername(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    public void deleteAllVoters() {
+        // Futa voters wote — sio admin
+        List<User> voters = userRepository.findAllByRole(Role.VOTER);
+        userRepository.deleteAll(voters);
     }
 }

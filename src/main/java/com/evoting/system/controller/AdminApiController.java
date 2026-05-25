@@ -7,6 +7,10 @@ import com.evoting.system.service.UserService;
 import com.evoting.system.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -40,6 +44,12 @@ public class AdminApiController {
 
     @Autowired
     private SupportMessageRepository supportMessageRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JavaMailSender mailSender;
 
     private String getUsernameFromToken(String authHeader) {
         String token = authHeader.replace("Bearer ", "");
@@ -97,8 +107,78 @@ public class AdminApiController {
         }
     }
 
+    // DELETE /api/admin/voters/delete-all
+    @DeleteMapping("/voters/delete-all")
+    public ResponseEntity<?> deleteAllVoters(
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            userService.deleteAllVoters();
+            return ResponseEntity.ok(Map.of("message", "Wapiga kura wote wamefutwa!"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // POST /api/admin/voters/send-credentials
+    @PostMapping("/voters/send-credentials")
+    public ResponseEntity<?> sendCredentialsToAll(
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            List<User> voters = userRepository.findAllByRole(Role.VOTER);
+            int sent = 0;
+            List<String> failed = new ArrayList<>();
+
+            for (User voter : voters) {
+                try {
+                    if (voter.getEmail() == null ||
+                        voter.getEmail().isEmpty()) {
+                        failed.add(voter.getFullName() + " — Hana email");
+                        continue;
+                    }
+
+                    // Tengeneza password ya default
+                    String firstName = voter.getFullName()
+                        .split(" ")[0].toLowerCase();
+                    String defaultPassword = firstName + "123";
+
+                    // Tuma email
+                    SimpleMailMessage mail = new SimpleMailMessage();
+                    mail.setTo(voter.getEmail());
+                    mail.setSubject("Taarifa ya Login — E-Voting System");
+                    mail.setText(
+                        "Habari " + voter.getFullName() + ",\n\n" +
+                        "Umesajiliwa kwenye mfumo wa E-Voting.\n\n" +
+                        "Taarifa zako za kuingia:\n" +
+                        "Username: " + voter.getAdmissionNumber() + "\n" +
+                        "Password: " + defaultPassword + "\n\n" +
+                        "Tafadhali badilisha password yako baada ya kuingia.\n\n" +
+                        "Asante,\nMfumo wa E-Voting"
+                    );
+                    mailSender.send(mail);
+                    sent++;
+
+                } catch (Exception e) {
+                    failed.add(voter.getFullName() +
+                        " — " + e.getMessage());
+                }
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("sent", sent);
+            response.put("failed", failed);
+            response.put("message", "Emails " + sent + " zimetumwa!");
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                .body(Map.of("error", e.getMessage()));
+        }
+    }
+
     // POST /api/admin/voters/bulk-import
     @PostMapping("/voters/bulk-import")
+    @Async
     public ResponseEntity<?> bulkImportVoters(
             @RequestHeader("Authorization") String authHeader,
             @RequestBody List<Map<String, String>> voters) {
@@ -106,29 +186,40 @@ public class AdminApiController {
             int count = 0;
             List<String> errors = new ArrayList<>();
             
+            // Process zote mara moja kwa speed
             for (Map<String, String> voterData : voters) {
                 try {
                     String fullName = voterData.get("fullName");
                     String admissionNumber = voterData.get("admissionNumber");
                     String email = voterData.getOrDefault("email", "");
                     
-                    if (fullName == null || fullName.isEmpty() ||
-                        admissionNumber == null || admissionNumber.isEmpty()) {
-                        errors.add("Skipped: " + voterData);
+                    if (fullName == null || fullName.trim().isEmpty() ||
+                        admissionNumber == null || admissionNumber.trim().isEmpty()) {
                         continue;
                     }
                     
-                    // Check kama tayari yupo
-                    if (userRepository.existsByUsername(admissionNumber)) {
-                        errors.add("Already exists: " + admissionNumber);
+                    // Skip kama tayari yupo — haraka zaidi
+                    if (userRepository.existsByUsername(admissionNumber.trim())) {
+                        errors.add("Tayari yupo: " + admissionNumber);
                         continue;
                     }
                     
-                    userService.addVoter(fullName, admissionNumber, 
-                                        admissionNumber, email, null);
+                    // Tengeneza password — firstname + 123
+                    String firstName = fullName.trim().split(" ")[0].toLowerCase();
+                    String password = firstName + "123";
+                    
+                    User user = new User();
+                    user.setFullName(fullName.trim());
+                    user.setUsername(admissionNumber.trim());
+                    user.setAdmissionNumber(admissionNumber.trim());
+                    user.setEmail(email.trim());
+                    user.setPassword(passwordEncoder.encode(password));
+                    user.setRole(Role.VOTER);
+                    userRepository.save(user);
                     count++;
+                    
                 } catch (Exception e) {
-                    errors.add("Error: " + e.getMessage());
+                    errors.add("Hitilafu: " + e.getMessage());
                 }
             }
             
