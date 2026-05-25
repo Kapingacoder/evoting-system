@@ -1,7 +1,9 @@
 package com.evoting.system.controller;
 
+import com.evoting.system.model.FCMToken;
 import com.evoting.system.model.SupportMessage;
 import com.evoting.system.model.User;
+import com.evoting.system.repository.FCMTokenRepository;
 import com.evoting.system.repository.SupportMessageRepository;
 import com.evoting.system.repository.UserRepository;
 import com.evoting.system.util.JwtUtil;
@@ -34,6 +36,9 @@ public class AuthController {
 
     @Autowired
     private JavaMailSender mailSender;
+
+    @Autowired
+    private FCMTokenRepository fcmTokenRepository;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
@@ -135,6 +140,49 @@ public class AuthController {
             // Hii itaonyesha error halisi
             return ResponseEntity.status(500)
                 .body(Map.of("error", "Imeshindwa: " + e.getMessage()));
+        }
+    }
+
+    // POST /api/auth/fcm-token
+    @PostMapping("/fcm-token")
+    public ResponseEntity<?> saveFcmToken(
+            @RequestHeader(value = "Authorization",
+                           required = false) String authHeader,
+            @RequestBody Map<String, String> request) {
+        try {
+            String fcmToken = request.get("fcmToken");
+            if (fcmToken == null) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "FCM token required"));
+            }
+
+            String username = "anonymous";
+            String role = "VOTER";
+
+            // Pata username kutoka token kama ipo
+            if (authHeader != null &&
+                authHeader.startsWith("Bearer ")) {
+                String jwt = authHeader.substring(7);
+                if (jwtUtil.validateToken(jwt)) {
+                    username = jwtUtil.extractUsername(jwt);
+                    role = jwtUtil.extractRole(jwt);
+                }
+            }
+
+            // Hifadhi au update FCM token
+            FCMToken existing = fcmTokenRepository
+                .findByUsername(username).orElse(new FCMToken());
+            existing.setUsername(username);
+            existing.setToken(fcmToken);
+            existing.setRole(role);
+            existing.setCreatedAt(java.time.LocalDateTime.now());
+            fcmTokenRepository.save(existing);
+
+            return ResponseEntity.ok(
+                Map.of("message", "FCM token saved!"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                .body(Map.of("error", e.getMessage()));
         }
     }
 }

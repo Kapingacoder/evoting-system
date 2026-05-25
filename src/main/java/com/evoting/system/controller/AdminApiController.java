@@ -3,6 +3,7 @@ package com.evoting.system.controller;
 import com.evoting.system.model.*;
 import com.evoting.system.repository.*;
 import com.evoting.system.service.ElectionService;
+import com.evoting.system.service.NotificationService;
 import com.evoting.system.service.UserService;
 import com.evoting.system.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +51,9 @@ public class AdminApiController {
 
     @Autowired
     private JavaMailSender mailSender;
+
+    @Autowired
+    private NotificationService notificationService;
 
     private String getUsernameFromToken(String authHeader) {
         String token = authHeader.replace("Bearer ", "");
@@ -596,6 +600,38 @@ public class AdminApiController {
         try {
             long count = supportMessageRepository.countByIsReadFalse();
             return ResponseEntity.ok(Map.of("count", count));
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // POST /api/admin/notifications/send
+    @PostMapping("/notifications/send")
+    public ResponseEntity<?> sendNotification(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody Map<String, String> request) {
+        try {
+            String title = request.get("title");
+            String body = request.get("body");
+            String target = request.getOrDefault("target", "voters");
+
+            if (title == null || body == null) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Title na body zinahitajika"));
+            }
+
+            int sent;
+            if (target.equals("all")) {
+                sent = notificationService.sendToAll(title, body);
+            } else {
+                sent = notificationService.sendToAllVoters(title, body);
+            }
+
+            return ResponseEntity.ok(Map.of(
+                "message", "Arifa " + sent + " zimetumwa!",
+                "sent", sent
+            ));
         } catch (Exception e) {
             return ResponseEntity.status(500)
                 .body(Map.of("error", e.getMessage()));
